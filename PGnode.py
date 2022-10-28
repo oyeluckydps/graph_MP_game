@@ -13,6 +13,8 @@ class PGnode:
         self.output = None
         self.incoming_nodes = []
         self.outgoing_nodes = []
+        self.incoming_log = []
+        self.outgoing_log = []
 
     def add_incoming_nodes(self, nodes_list):
         '''
@@ -50,10 +52,17 @@ class PGnode:
         :return: self
         '''
         incoming_values = [incoming_edge.output for incoming_edge in self.incoming_nodes]
+        self.incoming_log += incoming_values    # Log the incoming values to be used for perfomance evaluation of the agent.
         self._output_this_round = self._Agent.process(incoming_values, round_no)
 
     def enact_value(self, round_no):
+        '''
+        The function puts output of this round into the output accessible to other nodes.
+        :param round_no: Simulation step count.
+        :return:
+        '''
         self.output = self._output_this_round
+        self.outgoing_log.append(self.output)   #Log the output of agents too.
         self._output_this_round = None
 
     def __str__(self, prefix = '', indent = '\t'):
