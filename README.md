@@ -5,7 +5,11 @@ Gmae is divided into two sets. One for training and other for evaluation. All ag
 This continues for the training period and then into evaluation period. Finally the scores are tallied for each agent based on some evaluation norm over their target and the values they received.
 
 ## File Description
-### PGnetwork - A supportive class that helps in creation and management of graph/network.
-### PGnode - A class to handle node and its operations. It has a member pointing to agent on the node.
-### IOdatatype - A class to handle the datatype for input and output values of the Agent. Note that multiple types of data with diferent topographies are supported.
-### AgentWrapper - A parent class for all agents. The agents must derive game related information through this class members.
+### PGnetwork
+A supportive class that helps in creation and management of graph/network.
+### PGnode 
+A class to handle node and its operations. It has a member pointing to agent on the node.
+### IOdatatype
+A class to handle the datatype for input and output values of the Agent. Note that multiple types of data with diferent topographies are supported.
+### AgentWrapper
+A parent class for all agents. The agents must derive game related information through this class members.
