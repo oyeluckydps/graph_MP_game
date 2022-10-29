@@ -43,7 +43,7 @@ class PGnode:
         self.outgoing_nodes.remove(node)
 
     def set_incoming_operator(self, Agent):
-        self._Agent = Agent
+        self._Agent = Agent()
 
     def process_node(self, round_no):
         '''
