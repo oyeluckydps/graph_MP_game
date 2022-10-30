@@ -168,6 +168,19 @@ class PGnetwork:
                 warnings.warn(msg)
                 self.remove_node(to_node)
 
+    def process_network(self):
+        '''
+        :return: processing each node of network
+        operator on the output of first process and stored value.
+        '''
+        return {node_value: node.process_node() for node_value, node in self}
+
+    def enact_value(self):
+        return {node_value: node.enact_value() for node_value, node in self}
+
+    def reset_log(self):
+        [node.reset_log() for _, node in self]
+
     @property
     def network_value(self):
         return [node.value for _, node in self]

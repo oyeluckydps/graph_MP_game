@@ -3,12 +3,12 @@ class PGnode:
     '''
     Class to hold the node and associated agent for the game.
     '''
-    def __init__(self, name, Agent=None):
+    def __init__(self, name, agent=None):
         self.name = name
-        if Agent is not None:
-            self._Agent = Agent()
+        if agent is not None:
+            self._agent = agent
         else:
-            self._Agent = None
+            self._agent = None
         self._output_this_round = None
         self.output = None
         self.incoming_nodes = []
@@ -42,28 +42,34 @@ class PGnode:
     def remove_outgoing_node(self, node):
         self.outgoing_nodes.remove(node)
 
-    def set_incoming_operator(self, Agent):
-        self._Agent = Agent()
+    def set_incoming_operator(self, agent):
+        self._agent = agent
 
     def process_node(self, round_no):
         '''
         Take the input from incoming nodes and set the _output_this_round
         :param round_no: Simulation step count.
-        :return: self
+        :return: value of all incoming nodes for this round
         '''
         incoming_values = [incoming_edge.output for incoming_edge in self.incoming_nodes]
         self.incoming_log += incoming_values    # Log the incoming values to be used for perfomance evaluation of the agent.
-        self._output_this_round = self._Agent.process(incoming_values, round_no)
+        self._output_this_round = self._agent.process(incoming_values, round_no)
+        return incoming_values
 
-    def enact_value(self, round_no):
+    def enact_value(self):
         '''
         The function puts output of this round into the output accessible to other nodes.
         :param round_no: Simulation step count.
-        :return:
+        :return: output of this round
         '''
         self.output = self._output_this_round
         self.outgoing_log.append(self.output)   #Log the output of agents too.
         self._output_this_round = None
+        return self.output
+
+    def reset_log(self):
+        self.incoming_log = []
+        self.outgoing_log = []
 
     def __str__(self, prefix = '', indent = '\t'):
         all_members = [a for a in dir(self) if not (a.startswith('__') and a.endswith('__')) and not callable(getattr(self, a))]
