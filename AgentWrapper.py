@@ -67,11 +67,12 @@ class AgentCommonInformation:
         return not (self.is_training)
 
     @property
-    def total_rounds(self):
+    def total_rounds_count(self):
         return self.training_rounds_count + self.evaluation_rounds_count
 
     def reset_playground(self):
         self.__sim_no = 0
+        self.__sim_step_no = 0
 
     def _next_simulation(self):
         self.__sim_no += 1
@@ -109,6 +110,15 @@ class AgentAbstract(ABC):
     Common_Data = AgentCommonInformation()
 
     @abstractmethod
+    def __init__(self, target):
+        '''
+        :param target: Value of the target for agent.
+
+        The agent will always be initiated with a target value.
+        '''
+        pass
+
+    @abstractmethod
     def process(self, incoming_values, round_no):
         '''
         :param incoming_values: Values from different incoming nodes.
@@ -120,12 +130,25 @@ class AgentAbstract(ABC):
         '''
         pass
 
+    @abstractmethod
+    def new_target(self, new_target):
+        '''
+        Put the action to be taken when a new target is assigned. This is expected for a new simulation.
+        '''
+        pass
+
+
+########################################################################################################################
+########################################################################################################################
+
+
 class sample_Agent(AgentAbstract):
     '''
     A dumb sample agent that always outputs a single value that is the maximum permissible value.
     '''
-    def __init__(self):
+    def __init__(self, target):
         Common_Data = AgentAbstract.Common_Data
+        self.target = target
         if Common_Data.io_type == 'B':
             self.always_output = 2**Common_Data.io_max - 1
         else:
@@ -136,11 +159,15 @@ class sample_Agent(AgentAbstract):
             self.num_incoming_nodes = len(incoming_values)
         return self.always_output
 
+    def new_target(self, new_target):
+        self.target = new_target
+
+
 if __name__ == '__main__':
     distinct_io = IOdatatype(io_type = 'Z', io_topograph = 'distinct', io_range_min = 1, io_range_max = 10, evaluation_norm = 0)
     distinct_setup = AgentCommonInformation(io_description = distinct_io, training_rounds = 15, evaluation_rounds = 10)
     AgentAbstract.Common_Data = distinct_setup
-    Agent_007 = sample_Agent()
+    Agent_007 = sample_Agent(7)
     Agent_007.process([None, None, None], 0)
     Agent_007.process([1, 3, 0], 1)
     print(distinct_io)
