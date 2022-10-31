@@ -78,7 +78,7 @@ class AgentCommonInformation:
         self.__sim_no += 1
 
     def take_a_sim_step(self):
-        if self.sim_step_no == self.total_rounds-1:
+        if self.sim_step_no == self.total_rounds_count-1:
             self.__sim_step_no = 0
             self._next_simulation()
         else:

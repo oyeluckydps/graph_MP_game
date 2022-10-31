@@ -95,7 +95,8 @@ class IOdatatype():
 
         if io_desc.io_type == 'Z':
             if io_desc.topo == 'distinct':
-                raise Exception("Invalid norm for the given io_description!")
+                return [int(bool(t-a)) if type(a) is not list else io_desc.diff_calc(t, a) \
+                        for t, a in zip(target, achieved)]
             if io_desc.topo == 'straight':
                 return [abs(t-a) if type(a) is not list else io_desc.diff_calc(t, a) \
                         for t,a in zip(target, achieved)]
