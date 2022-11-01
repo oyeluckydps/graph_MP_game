@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 from IOdatatype import IOdatatype
 
@@ -70,19 +69,34 @@ class AgentCommonInformation:
     def total_rounds_count(self):
         return self.training_rounds_count + self.evaluation_rounds_count
 
-    def reset_playground(self):
+    def _reset_playground(self):
         self.__sim_no = 0
         self.__sim_step_no = 0
 
     def _next_simulation(self):
         self.__sim_no += 1
 
-    def take_a_sim_step(self):
+    def _take_a_sim_step(self):
         if self.sim_step_no == self.total_rounds_count-1:
             self.__sim_step_no = 0
             self._next_simulation()
         else:
             self.__sim_step_no += 1
+
+    def _get_diff(self, target, input):
+        """
+        :param target: The target value/s against which input diff is to be calculated.
+        :param input: The input/achieved value.
+        :return: The difference according to IO and nor.
+        """
+        return self.__io_desc.diff_calc(target, input)
+
+    def _get_norm(self, diff):
+        """
+        :param diff: The difference vector
+        :return: Norm of the diff according to IO metric.
+        """
+        return self.__io_desc.norm_fn(diff)
 
     def __str__(self, prefix = '', indent = '\t'):
         all_members = [a for a in dir(self) if not (a.startswith('__') and a.endswith('__')) and not callable(getattr(self, a))]
@@ -137,30 +151,20 @@ class AgentAbstract(ABC):
         '''
         pass
 
+    def get_diff(self, target, input):
+        """
+        :param target: The target value/s against which input diff is to be calculated.
+        :param input: The input/achieved value.
+        :return: The difference according to IO and nor.
+        """
+        return self.Common_Data._get_diff(target, input)
 
-########################################################################################################################
-########################################################################################################################
-
-
-class sample_Agent(AgentAbstract):
-    '''
-    A dumb sample agent that always outputs a single value that is the maximum permissible value.
-    '''
-    def __init__(self, target):
-        Common_Data = AgentAbstract.Common_Data
-        self.target = target
-        if Common_Data.io_type == 'B':
-            self.always_output = 2**Common_Data.io_max - 1
-        else:
-            self.always_output = Common_Data.io_max
-
-    def process(self, incoming_values, round_no):
-        if round_no == 0:
-            self.num_incoming_nodes = len(incoming_values)
-        return self.always_output
-
-    def new_target(self, new_target):
-        self.target = new_target
+    def get_norm(self, diff):
+        """
+        :param diff: The difference vector
+        :return: Norm of the diff according to IO metric.
+        """
+        return self.Common_Data._get_norm(diff)
 
 
 if __name__ == '__main__':
