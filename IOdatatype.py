@@ -104,7 +104,7 @@ class IOdatatype():
                 range = io_desc.max - io_desc.min
                 return [min(abs(t-a), abs(t-a+range), abs(t-a-range)) if type(a) is not list \
                      else io_desc.diff_calc(t, a) for t,a in zip(target, achieved)]
-        if io_desc.io_type == 'Z':
+        if io_desc.io_type == 'R':
             if io_desc.topo == 'straight':
                 [abs(t-a) if type(a) is not list else io_desc.diff_calc(t, a) for t,a in zip(target, achieved)]
             if io_desc.topo == 'ring':
@@ -154,8 +154,9 @@ class IOdatatype():
 
 if __name__ == '__main__':
     normal_Z = IOdatatype('Z', io_topograph = 'ring', io_range_min = 0, io_range_max = 15, evaluation_norm = 2)
-    diff = normal_Z.diff_calc([1,2,[3, 0]], [2,4,[6, 8]])
+    diff = normal_Z.diff_calc(2, [[2,4]])
     norm = normal_Z.norm_fn(diff)
     print("diff = ", diff)
     print("norm = ", norm)
+    print(normal_Z)
     pass

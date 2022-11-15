@@ -1,10 +1,13 @@
 
 import copy
 from random import randint as randi
+from pathlib import Path
 
 from IOdatatype import IOdatatype
-from AgentWrapper import AgentCommonInformation, AgentAbstract, sample_Agent
+from AgentWrapper import AgentCommonInformation, AgentAbstract
+from sampleAgents import target_returning_Agent, random_Agent
 from PGnetwork import PGnetwork
+from best_of_last_step import bestOfLastStep
 
 class PGsim:
     """
@@ -23,7 +26,7 @@ class PGsim:
 
         self.network = network
         self.common_agent_information = common_agent_information
-        self.common_agent_information.reset_playground()
+        self.common_agent_information._reset_playground()
         self.io_desc = io_desc      # CAUTION: Repetetive information here. But io_desc cannot be accessed directly from
                                     # common_agent_information
 
@@ -47,12 +50,11 @@ class PGsim:
             output_all_this_sim = {node_value: [] for node_value in self.network.nodes.keys()}
             evaluation_incoming_vals_this_sim = {node_value: [] for node_value in self.network.nodes.keys()}
             for self.curr_step_no in range(self.__total_steps_in_sim):
-                if verbose:
-                    print("Sim No: ", self.curr_sim_count, "; Step No: ", self.curr_step_no)
+                print("Sim No: ", self.curr_sim_count, "; Step No: ", self.curr_step_no)
 
                 incoming_value_for_nodes = self.network.process_network(self.curr_step_no)
                 output_all_nodes = self.network.enact_value()
-                self.common_agent_information.take_a_sim_step()
+                self.common_agent_information._take_a_sim_step()
 
                 if self.curr_step_no >= self.common_agent_information.training_rounds_count:
                     for node_value, incoming_vals_this_step in incoming_value_for_nodes.items():
@@ -66,6 +68,7 @@ class PGsim:
                 self.all_output_logs[node_value].append(output_this_sim)
             for node_value, incoming_vals_this_sim in evaluation_incoming_vals_this_sim.items():
                 self.evaluation_incoming_values_logs[node_value].append(incoming_vals_this_sim)
+            self.save_log()
         if verbose:
             print("***************** End of Simulation *****************")
 
@@ -101,22 +104,57 @@ class PGsim:
                 print(norm_this_sim)
         return self.all_norms
 
+    def save_log(self):
+        folder_add = Path((str(id(AgentAbstract)) + "_" + str(self.curr_sim_count)))
+        folder_add.mkdir(parents=True, exist_ok=True)
+        all_outputs = [sim_out[self.curr_sim_count] for sim_out in self.all_output_logs.values()]
+        with open(folder_add / Path('Node_output' + '_log.txt'), 'w') as f:
+            for ind, output in enumerate(zip(*all_outputs)):
+                f.write(f" {ind}: {output} \n")
+
 
 if __name__ == '__main__':
-    distinct_io = IOdatatype(io_type = 'Z', io_topograph = 'distinct', io_range_min = 1, io_range_max = 16, evaluation_norm = 0)
-    distinct_setup = AgentCommonInformation(io_description = distinct_io, training_rounds = 15, evaluation_rounds = 10)
-    AgentAbstract.Common_Data = distinct_setup
+
     nodes4_random_SC = {
         1: [2, 3],
         2: [3],
         3: [4],
         4: [1]
     }
-    targets = {node: randi(distinct_io.min, distinct_io.max) for node in nodes4_random_SC}
-    targets[4] = 16
-    agents = [sample_Agent(target) for (target, _) in zip(targets, nodes4_random_SC)]
-    PG1 = PGnetwork(nodes4_random_SC, agents)
-    sim1 = PGsim(4, PG1, distinct_setup, distinct_io, True)
+    nodes4_ring = {
+        1: [2],
+        2: [3],
+        3: [4],
+        4: [1]
+    }
+    nodes2_ring = {
+        1: [2],
+        2: [1]
+    }
+
+########################################################################################################################
+
+    distinct_io = IOdatatype(io_type = 'Z', io_topograph = 'distinct', io_range_min = 1, io_range_max = 8, evaluation_norm = 0)
+    distinct_setup = AgentCommonInformation(io_description = distinct_io, training_rounds = 4000, evaluation_rounds = 4000)
+    AgentAbstract.Common_Data = distinct_setup
+    targets = {node: randi(distinct_io.min, distinct_io.max) for node in nodes2_ring}
+    agents = [bestOfLastStep(target) for (target, _) in zip(targets, nodes2_ring)]
+    PG1 = PGnetwork(nodes2_ring, agents)
+    sim1 = PGsim(1, PG1, distinct_setup, distinct_io, False)
     sim1.run_sim()
     sim1.evaluate_performance(targets)
+    sim1.save_log()
+
+########################################################################################################################
+
+    # ring_io = IOdatatype(io_type='Z', io_topograph='ring', io_range_min=1, io_range_max=8, evaluation_norm=1)
+    # ring_setup = AgentCommonInformation(io_description=ring_io, training_rounds=4000, evaluation_rounds=1000)
+    # AgentAbstract.Common_Data = ring_setup
+    # targets = {node: randi(ring_io.min, ring_io.max) for node in nodes4_ring}
+    # agents = [bestOfLastStep(target) for (target, _) in zip(targets, nodes4_ring)]
+    # PG1 = PGnetwork(nodes4_ring, agents)
+    # sim2 = PGsim(1, PG1, ring_setup, ring_io, False)
+    # sim2.run_sim()
+    # sim2.evaluate_performance(targets)
+    # sim2.save_log()
 

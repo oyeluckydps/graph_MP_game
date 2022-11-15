@@ -7,13 +7,21 @@ from AgentWrapper import AgentAbstract
 
 class bestOfLastStep(AgentAbstract):
 
-    def __init__(self, target):
+    def __new__(self, target):
         Common_Data = AgentAbstract.Common_Data
-        self.target = target
         if Common_Data.io_type != 'Z':
             raise Exception("I work only with Z datatype!")
-        if Common_Data.io_topo != 'distinct':
-            raise Exception("I work only with distinct topology!")
+        if Common_Data.io_topo == 'distinct':
+            return bestOfLastStep_Z_distinct(target)
+        elif Common_Data.io_topo == 'ring':
+            return bestOfLastStep_Z_ring(target)
+
+
+
+class bestOfLastStep_Z_distinct(AgentAbstract):
+
+    def __init__(self, target):
+        self.target = target
         self.freq_chart = pd.DataFrame(columns = ['prior_mem', 'my_output', 'system_returns', 'norm', 'freq'])
         self.incoming_log = []
         self.output_log = []
@@ -84,3 +92,17 @@ class bestOfLastStep(AgentAbstract):
 
     def new_target(self, new_target):
         self.target = new_target
+
+
+class bestOfLastStep_Z_ring(AgentAbstract):
+
+    def __init__(self, target):
+        self.target = target
+        self.freq_chart = pd.DataFrame(columns = ['prior_mem', 'my_output', 'system_returns', 'norm', 'freq'])
+        self.incoming_log = []
+        self.output_log = []
+        self.sim_no = 0
+
+    def process(self, incoming_values, round_no):
+        # Put your implementation here.
+        pass
