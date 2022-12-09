@@ -1,4 +1,3 @@
-
 import copy
 from random import randint as randi
 from pathlib import Path
@@ -8,6 +7,7 @@ from AgentWrapper import AgentCommonInformation, AgentAbstract
 from sampleAgents import target_returning_Agent, random_Agent
 from PGnetwork import PGnetwork
 from best_of_last_step import bestOfLastStep
+from utilities import detect_repetition
 
 class PGsim:
     """
@@ -35,6 +35,7 @@ class PGsim:
         self.evaluation_incoming_values_logs = {node_value: [] for node_value in self.network.nodes.keys()}
         self.all_diffs = {node_value: [] for node_value in self.network.nodes.keys()}
         self.all_norms = {node_value: [] for node_value in self.network.nodes.keys()}
+        self.repetition = []
 
         self.verbose = verbose
 
@@ -68,6 +69,8 @@ class PGsim:
                 self.all_output_logs[node_value].append(output_this_sim)
             for node_value, incoming_vals_this_sim in evaluation_incoming_vals_this_sim.items():
                 self.evaluation_incoming_values_logs[node_value].append(incoming_vals_this_sim)
+            period = detect_repetition([outputs for outputs in zip(*output_all_this_sim.values())])
+            self.repetition.append(period)
             self.save_log()
         if verbose:
             print("***************** End of Simulation *****************")
@@ -109,6 +112,7 @@ class PGsim:
         folder_add.mkdir(parents=True, exist_ok=True)
         all_outputs = [sim_out[self.curr_sim_count] for sim_out in self.all_output_logs.values()]
         with open(folder_add / Path('Node_output' + '_log.txt'), 'w') as f:
+            f.write(f"Repetition of cycle = {self.repetition[-1]} detected!\n")
             for ind, output in enumerate(zip(*all_outputs)):
                 f.write(f" {ind}: {output} \n")
 
