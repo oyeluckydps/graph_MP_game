@@ -39,7 +39,35 @@ class PGsim:
 
         self.verbose = verbose
 
-    def run_sim(self):
+        self._path_prefix = Path('')
+
+    @property
+    def path_prefix(self):
+        return self._path_prefix
+
+    @path_prefix.setter
+    def path_prefix(self, pp):
+        self._path_prefix = Path(pp)
+
+
+    def take_a_sim_step(self, evaluation_incoming_vals_this_sim = None, output_all_this_sim = None):
+        print("Sim No: ", self.curr_sim_count, "; Step No: ", self.curr_step_no)
+        verbose = self.verbose
+        incoming_value_for_nodes = self.network.process_network(self.curr_step_no)
+        output_all_nodes = self.network.enact_value()
+        self.common_agent_information._take_a_sim_step()
+
+        if evaluation_incoming_vals_this_sim and (self.curr_step_no >= self.common_agent_information.training_rounds_count):
+            for node_value, incoming_vals_this_step in incoming_value_for_nodes.items():
+                evaluation_incoming_vals_this_sim[node_value].append(incoming_vals_this_step)
+        if output_all_this_sim:
+            for node_value, output_this_step in output_all_nodes.items():
+                output_all_this_sim[node_value].append(output_this_step)
+        if verbose:
+            print(output_all_nodes)
+
+
+    def run_sim(self, save_log = True, early_break = False):
         verbose = self.verbose
         if verbose:
             print("Starting the simulation with following configuration.")
@@ -50,28 +78,27 @@ class PGsim:
         for self.curr_sim_count in range(self.__total_sim_count):
             output_all_this_sim = {node_value: [] for node_value in self.network.nodes.keys()}
             evaluation_incoming_vals_this_sim = {node_value: [] for node_value in self.network.nodes.keys()}
+
             for self.curr_step_no in range(self.__total_steps_in_sim):
-                print("Sim No: ", self.curr_sim_count, "; Step No: ", self.curr_step_no)
+                self.take_a_sim_step(evaluation_incoming_vals_this_sim=evaluation_incoming_vals_this_sim,
+                                     output_all_this_sim=output_all_this_sim)
+                # self.take_a_sim_step()
+                if early_break and self.curr_step_no>1:
+                    period = detect_repetition([outputs for outputs in zip(*output_all_this_sim.values())])
+                    if period is not None:
+                        self.repetition.append(period)
+                        break
+            else:
+                period = detect_repetition([outputs for outputs in zip(*output_all_this_sim.values())])
+                self.repetition.append(period)
 
-                incoming_value_for_nodes = self.network.process_network(self.curr_step_no)
-                output_all_nodes = self.network.enact_value()
-                self.common_agent_information._take_a_sim_step()
-
-                if self.curr_step_no >= self.common_agent_information.training_rounds_count:
-                    for node_value, incoming_vals_this_step in incoming_value_for_nodes.items():
-                        evaluation_incoming_vals_this_sim[node_value].append(incoming_vals_this_step)
-                for node_value, output_this_step in output_all_nodes.items():
-                    output_all_this_sim[node_value].append(output_this_step)
-                if verbose:
-                    print(output_all_nodes)
             self.network.reset_log()
             for node_value, output_this_sim in output_all_this_sim.items():
                 self.all_output_logs[node_value].append(output_this_sim)
             for node_value, incoming_vals_this_sim in evaluation_incoming_vals_this_sim.items():
                 self.evaluation_incoming_values_logs[node_value].append(incoming_vals_this_sim)
-            period = detect_repetition([outputs for outputs in zip(*output_all_this_sim.values())])
-            self.repetition.append(period)
-            self.save_log()
+            if save_log:
+                self.save_log()
         if verbose:
             print("***************** End of Simulation *****************")
 
@@ -108,11 +135,13 @@ class PGsim:
         return self.all_norms
 
     def save_log(self):
-        folder_add = Path((str(id(AgentAbstract)) + "_" + str(self.curr_sim_count)))
+        folder_add = Path(self.path_prefix)/Path((str(id(AgentAbstract)) + "_" + str(self.curr_sim_count)))
         folder_add.mkdir(parents=True, exist_ok=True)
         all_outputs = [sim_out[self.curr_sim_count] for sim_out in self.all_output_logs.values()]
         with open(folder_add / Path('Node_output' + '_log.txt'), 'w') as f:
             f.write(f"Repetition of cycle = {self.repetition[-1]} detected!\n")
+            f.write(f"The nodes are: {self.node_names}\n")
+            f.write(f"The network is: {self.network}\n")
             for ind, output in enumerate(zip(*all_outputs)):
                 f.write(f" {ind}: {output} \n")
 

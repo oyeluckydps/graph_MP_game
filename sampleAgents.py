@@ -68,32 +68,52 @@ class fixed_map_Agent(AgentAbstract):
             self.type, self.min, self.max = 'Z', Common_Data.io_min, Common_Data.io_max
         else:
             raise TypeError("Real type is not supported with fixed_map_Agent!")
-        self.incoming_edges_count = None
-        self.name = None
-        self.experiment_number = 0
+        self._incoming_edges_count = None
+        self._path_prefix = Path('')
+        self._my_name = None
+        self.map_count = 0
 
-    def set_name(self, name):
-        self.name = str(name)
+    @property
+    def my_name(self):
+        return self._my_name
+
+    @my_name.setter
+    def my_name(self, name):
+        self._my_name = str(name)
+
+    @property
+    def path_prefix(self):
+        return self._path_prefix
+
+    @path_prefix.setter
+    def path_prefix(self, path_prefix):
+        self._path_prefix = Path(path_prefix)
+
+    @property
+    def incoming_edges_count(self):
+        return self._incoming_edges_count
+
+    @incoming_edges_count.setter
+    def incoming_edges_count(self, num_edges):
+        self._incoming_edges_count = num_edges
 
     def reset_fix_map(self):
         if self.incoming_edges_count is not None:
             all_possible_inputs = list(product(list(range(self.min, self.max+1)), repeat=self.incoming_edges_count))
             self.map = {an_input:randi(self.min, self.max) for an_input in all_possible_inputs}
             # Save Map
-            folder_add = Path(str(id(AgentAbstract))+'_'+str(self.experiment_number))
+            folder_add = self._path_prefix
             folder_add.mkdir(parents=True, exist_ok=True)
-            with open(folder_add / Path('map_of_' + str(self.name) + '_' + str(id(self)) + '.txt'), 'w') as f:
-                f.write('I am '+str(self.name)+'.\n')
+            with open(folder_add / Path('map_of_' + str(self._my_name) + '.txt'), 'w') as f:
+                f.write('I am '+str(self._my_name)+'.\n')
                 for ic, ou in self.map.items():
                     f.write(f"{ic}: {ou}\n")
         else:
             raise('Number of incoming edges is unknown!')
-        self.experiment_number += 1
+        self.map_count += 1
 
     def process(self, incoming_values, round_no):
         if not round_no:        # Round 0
-            self.incoming_edges_count = len(incoming_values)
-            self.reset_fix_map()
             return randi(self.min, self.max)
         return self.map.get(tuple(incoming_values))
 
