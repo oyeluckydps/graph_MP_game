@@ -35,6 +35,10 @@ class AgentCommonInformation:
         return self.__io_desc.max
 
     @property
+    def all_elems(self):
+        return self.__io_desc.all_elems
+
+    @property
     def io_norm(self):
         return self.__io_desc.norm
 

@@ -65,6 +65,17 @@ class IOdatatype():
         if (self.io_type, self.topo, self.norm_type) not in self.allowed_combination:
             raise TypeError("Invalid combination of IO params!")
 
+    @property
+    def all_elems(self):
+        if self.io_type not in ['Z', 'B']:
+            raise("Impossible to list down all elements for IO type = 'R'!")
+        else:
+            if self.io_type == 'Z':
+                return set(range(self.min, self.max+1))
+            elif self.io_type == 'B':
+                return set(range(2**self.max))
+
+
 #------------------------------* Norm Evaluation Related Functions *----------------------------------#
     def set_evaluation_fn(self):
         if self.norm_type == 0:
