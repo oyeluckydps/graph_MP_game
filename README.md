@@ -29,4 +29,4 @@ A sample agent that returns its target to explain how agent implementation is ex
 An agent that returns random values.
 
 ### best_of_last_step.py
-Contains an agent that optimizes output based on past data.
+Contains an agent that optimizes output based on past data using SARSA algorithm (http://incompleteideas.net/book/ebook/node64.html or https://en.wikipedia.org/wiki/State%E2%80%93action%E2%80%93reward%E2%80%93state%E2%80%93action)
